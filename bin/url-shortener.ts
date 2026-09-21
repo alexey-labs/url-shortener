@@ -1,20 +1,22 @@
 #!/usr/bin/env node
-import * as cdk from 'aws-cdk-lib/core';
-import { UrlShortenerStack } from '../lib/url-shortener-stack';
+import * as cdk from "aws-cdk-lib";
+import { NetworkStack } from "../lib/network-stack";
+import { TrafficoStack } from "../lib/traffico-stack";
+import { UrlShortenerStack } from "../lib/url-shortener-stack";
 
 const app = new cdk.App();
-new UrlShortenerStack(app, 'UrlShortenerStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
+const env = {
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+  region: "us-east-2",
+};
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+const networkStack = new NetworkStack(app, "NetworkStack", { env });
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
+new UrlShortenerStack(app, "UrlShortenerStack", {
+  env,
+});
 
-  /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
+new TrafficoStack(app, "TrafficoStack", {
+  env,
+  vpc: networkStack.vpc,
 });
