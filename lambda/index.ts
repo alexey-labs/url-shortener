@@ -5,32 +5,20 @@ import {
   PutCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuidv4 } from "uuid";
+import { APIGatewayEvent, Context } from "aws-lambda";
 
 const tableName = process.env.TABLE_NAME;
 const region = process.env.REGION || "us-east-2";
 const client = new DynamoDBClient({ region });
 const docClient = DynamoDBDocumentClient.from(client);
 
-interface Event {
-  queryStringParameters?: {
-    targetUrl?: string;
-  };
-  pathParameters?: {
-    shortUrl?: string;
-  };
-  requestContext?: {
-    domainName?: string;
-    path?: string;
-  };
-}
-
-export async function handler(event: Event) {
+export async function handler(event: APIGatewayEvent) {
   console.log("received event:", JSON.stringify(event, null, 2));
 
-  if (event.queryStringParameters?.targetUrl != undefined) {
-    return readShortUrl(event);
-  } else if (event.pathParameters?.shortUrl != undefined) {
+  if (event.queryStringParameters) {
     return createShortUrl(event);
+  } else if (event.pathParameters) {
+    return readShortUrl(event);
   } else {
     return {
       statusCode: 200,
@@ -39,7 +27,7 @@ export async function handler(event: Event) {
   }
 }
 
-async function createShortUrl(event: Event) {
+async function createShortUrl(event: APIGatewayEvent) {
   const targetUrl = event.queryStringParameters?.targetUrl;
 
   const id = uuidv4().slice(0, 8); // Generate a unique ID for the short URL (take first 8 chars)
@@ -53,8 +41,8 @@ async function createShortUrl(event: Event) {
   });
 
   await docClient.send(command);
-  const { domainName, path } = event.requestContext || {};
-  const shortUrl = `https://${domainName}/${path}/${id}`;
+  const { domainName, path } = event.requestContext;
+  const shortUrl = `https://${domainName}${path}${id}`;
 
   return {
     statusCode: 200,
@@ -63,8 +51,8 @@ async function createShortUrl(event: Event) {
   };
 }
 
-async function readShortUrl(event: Event) {
-  const shortUrl = event.pathParameters?.shortUrl;
+async function readShortUrl(event: APIGatewayEvent) {
+  const shortUrl = event.pathParameters?.proxy;
 
   const command = new GetCommand({
     TableName: tableName,

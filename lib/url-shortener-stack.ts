@@ -4,6 +4,7 @@ import * as ddb from "aws-cdk-lib/aws-dynamodb";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
 export class UrlShortenerStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -27,5 +28,9 @@ export class UrlShortenerStack extends cdk.Stack {
     table.grantReadWriteData(func);
     func.addEnvironment("TABLE_NAME", table.tableName);
     func.addEnvironment("REGION", "us-east-2");
+
+    new apigateway.LambdaRestApi(this, "api", {
+      handler: func,
+    });
   }
 }
