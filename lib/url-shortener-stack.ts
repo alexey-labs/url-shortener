@@ -27,7 +27,7 @@ export class UrlShortenerStack extends cdk.Stack {
 
     table.grantReadWriteData(func);
     func.addEnvironment("TABLE_NAME", table.tableName);
-    func.addEnvironment("REGION", "us-east-2");
+    func.addEnvironment("REGION", props?.env?.region || "us-east-2");
 
     new apigateway.LambdaRestApi(this, "api", {
       handler: func,

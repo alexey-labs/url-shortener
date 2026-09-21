@@ -1,6 +1,7 @@
 import { Construct } from "constructs";
 import * as ecs from "aws-cdk-lib/aws-ecs";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as path from "path";
 
 interface TrafficoProps {
   vpc: ec2.IVpc;
@@ -16,7 +17,7 @@ export class Traffico extends Construct {
 
     const taskDef = new ecs.FargateTaskDefinition(this, "PingerTask");
     taskDef.addContainer("Pinger", {
-      image: ecs.ContainerImage.fromAsset("../pinger"),
+      image: ecs.ContainerImage.fromAsset(path.join(__dirname, "./pinger")),
       environment: {
         URL: props.url,
       },
